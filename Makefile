@@ -90,9 +90,13 @@ BUILD = _build-$(BOARD)
 
 # MCU_SUB_VARIANT can be nrf52 (nrf52832), nrf52833, nrf52840
 ifeq ($(MCU_SUB_VARIANT),nrf52)
-  SD_NAME = s132
+  # SD_NAME=s112 builds for the peripheral-only SoftDevice, which is 52 KB smaller.
+  SD_NAME ?= s132
+  ifeq ($(filter s112 s132,$(SD_NAME)),)
+    $(error SD_NAME must be s112 or s132 on nrf52832)
+  endif
   DFU_DEV_REV = 0xADAF
-  MCU_FLAGS = -DNRF52 -DNRF52832_XXAA -DS132
+  MCU_FLAGS = -DNRF52 -DNRF52832_XXAA -D$(shell echo $(SD_NAME) | tr a-z A-Z)
 else ifeq ($(MCU_SUB_VARIANT),nrf52833)
   SD_NAME = s140
   DFU_DEV_REV = 52840

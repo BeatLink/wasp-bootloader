@@ -22,7 +22,9 @@
 #include "app_util.h"
 #include "app_error.h"
 
+#ifndef S112
 #include "ble_l2cap.h"
+#endif
 #include "ble_gap.h"
 #include "ble_gatt.h"
 #include "ble_hci.h"
@@ -75,6 +77,10 @@ enum { BLE_CONN_CFG_HIGH_BANDWIDTH = 1 };
 #define SEC_PARAM_MIN_KEY_SIZE               7                                                       /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE               16                                                      /**< Maximum encryption key size. */
 
+// S112 has no L2CAP header; its default ATT MTU is the same 23 bytes.
+#ifndef BLE_L2CAP_MTU_DEF
+#define BLE_L2CAP_MTU_DEF                    BLE_GATT_ATT_MTU_DEFAULT
+#endif
 #define MAX_SIZE_OF_BLE_STACK_EVT            (sizeof(ble_evt_t) + BLE_L2CAP_MTU_DEF)                 /**< Maximum size (in bytes) of the event received from S110 SoftDevice.*/
 #define NUM_WORDS_RESERVED_FOR_BLE_EVENTS    CEIL_DIV(MAX_SIZE_OF_BLE_STACK_EVT, sizeof(uint32_t))   /**< Size of the memory (in words) reserved for receiving S110 SoftDevice events. */
 
@@ -887,11 +893,13 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             // No implementation needed.
             break;
 
+#ifndef S112 // S112 has no data length extension
         case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
           // Let Softdevice decide the data length
           // ble_gap_data_length_params_t* param = &evt->evt.gap_evt.params.data_length_update_request.peer_params
           APP_ERROR_CHECK( sd_ble_gap_data_length_update(m_conn_handle, NULL, NULL) );
         break;
+#endif
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
         {
@@ -1134,15 +1142,25 @@ static lookup_entry_t const _strevt_lookup[] =
     { .key = BLE_GAP_EVT_CONN_SEC_UPDATE             , .data= "BLE_GAP_EVT_CONN_SEC_UPDATE"             },
     { .key = BLE_GAP_EVT_TIMEOUT                     , .data= "BLE_GAP_EVT_TIMEOUT"                     },
     { .key = BLE_GAP_EVT_RSSI_CHANGED                , .data= "BLE_GAP_EVT_RSSI_CHANGED"                },
+#ifndef S112
     { .key = BLE_GAP_EVT_ADV_REPORT                  , .data= "BLE_GAP_EVT_ADV_REPORT"                  },
+#endif
     { .key = BLE_GAP_EVT_SEC_REQUEST                 , .data= "BLE_GAP_EVT_SEC_REQUEST"                 },
+#ifndef S112
     { .key = BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST   , .data= "BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST"   },
+#endif
     { .key = BLE_GAP_EVT_SCAN_REQ_REPORT             , .data= "BLE_GAP_EVT_SCAN_REQ_REPORT"             },
     { .key = BLE_GAP_EVT_PHY_UPDATE_REQUEST          , .data= "BLE_GAP_EVT_PHY_UPDATE_REQUEST"          },
     { .key = BLE_GAP_EVT_PHY_UPDATE                  , .data= "BLE_GAP_EVT_PHY_UPDATE"                  },
+#ifndef S112
     { .key = BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST  , .data= "BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST"  },
+#endif
+#ifndef S112
     { .key = BLE_GAP_EVT_DATA_LENGTH_UPDATE          , .data= "BLE_GAP_EVT_DATA_LENGTH_UPDATE"          },
+#endif
+#ifndef S112
     { .key = BLE_GAP_EVT_QOS_CHANNEL_SURVEY_REPORT   , .data= "BLE_GAP_EVT_QOS_CHANNEL_SURVEY_REPORT"   },
+#endif
     { .key = BLE_GAP_EVT_ADV_SET_TERMINATED          , .data= "BLE_GAP_EVT_ADV_SET_TERMINATED"          },
 
     // BLE Gattc: 0x30
